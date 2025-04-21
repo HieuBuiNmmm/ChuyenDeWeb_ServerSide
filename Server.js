@@ -76,15 +76,27 @@ app.post('/api/login', async (req, res) => {
         // Tạo Access Token và Refresh Token
         const accessToken = generateToken({ id: user.id, email: user.email, role: user.role });
         const refreshToken = generateRefreshToken({ id: user.id, email: user.email });
+
         console.log("Access Token:", accessToken); // Log Access Token
         console.log("Refresh Token:", refreshToken); // Log Refresh Token
+
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: true, // Chỉ sử dụng nếu chạy HTTPS
             sameSite: 'strict',
         });
 
-        res.status(200).json({ accessToken, refreshToken });
+        // Trả về thông tin người dùng cùng với token
+        res.status(200).json({
+            accessToken,
+            refreshToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                created_at: user.created_at,
+            },
+        });
     } catch (error) {
         console.error("Login error:", error.message);
         res.status(500).json({ error: 'Login failed', details: error.message });
