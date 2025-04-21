@@ -35,7 +35,7 @@ const categoryMapping = {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { generateToken, generateRefreshToken, verifyToken, verifyRefreshToken } = require('./Utils/jwtUtils');
 
 // Middleware xác thực JWT
@@ -220,40 +220,6 @@ async function generateUserId() {
         throw new Error("Không thể tạo ID người dùng");
     }
 }
-
-// app.post('/api/products', async (req, res) => {
-//     try {
-//         const collection = await connectToDatabase(productCollectionName);
-
-//         // Kiểm tra dữ liệu đầu vào
-//         const { Ảnh, Tên, Cửa_Hàng, Trạng_Thái, Danh_Mục, Giá, Mô_tả } = req.body;
-//         if (!Ảnh || !Tên || !Cửa_Hàng || !Trạng_Thái || !Danh_Mục || !Giá || !Mô_tả) {
-//             return res.status(400).json({ error: 'Thiếu thông tin sản phẩm!' });
-//         }
-
-//         // Tạo ID tự động
-//         const newId = await generateProductId(Danh_Mục);
-
-//         // Tạo sản phẩm mới
-//         const newProduct = {
-//             ID: newId,
-//             Ảnh, // Lưu đường dẫn ảnh hoặc tên file
-//             Tên,
-//             Cửa_Hàng,
-//             Trạng_Thái,
-//             Danh_Mục,
-//             Giá: parseInt(Giá, 10), // Đảm bảo giá là số nguyên
-//             Mô_tả,
-//         };
-
-//         // Lưu sản phẩm vào cơ sở dữ liệu
-//         const result = await collection.insertOne(newProduct);
-//         res.status(201).json({ message: 'Product created successfully', productId: result.insertedId });
-//     } catch (error) {
-//         console.error("Lỗi khi thêm sản phẩm:", error);
-//         res.status(500).json({ error: 'Failed to create product', details: error.message });
-//     }
-// });
 
 app.post('/api/products', async (req, res) => {
     try {
