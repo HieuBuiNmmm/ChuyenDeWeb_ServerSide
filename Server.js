@@ -361,7 +361,7 @@ app.post('/api/orders', async (req, res) => {
         const collection = await connectToDatabase(orderCollectionName);
 
         // Kiểm tra dữ liệu đầu vào
-        const {order_id, user_id, food_id, quantity, total_price, order_time, status } = req.body;
+        const { order_id, user_id, food_id, quantity, total_price, order_time, status } = req.body;
         if (!order_id || !user_id || !food_id || !quantity || !total_price || !order_time || !status) {
             return res.status(400).json({ error: 'Thiếu thông tin order!' });
         }
