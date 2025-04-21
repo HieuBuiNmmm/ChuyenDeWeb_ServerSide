@@ -16,6 +16,7 @@ const client = new MongoClient(uri);
 const dbName = "db0";
 const productCollectionName = "product";
 const userCollectionName = "user";
+const orderCollectionName = "order";
 
 // Connect to MongoDB
 async function connectToDatabase(collectionName) {
@@ -339,6 +340,116 @@ app.delete('/api/products/:id', async (req, res) => {
         res.status(200).json({ message: 'Product deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete product', details: error.message });
+    }
+});
+
+// CREATE: Tạo một order mới
+app.post('/api/orders', async (req, res) => {
+    try {
+        const collection = await connectToDatabase(orderCollectionName);
+
+        // Kiểm tra dữ liệu đầu vào
+        const { _id, order_id, user_id, food_id, quantity, total_price, order_time, status } = req.body;
+        if (!_id || !order_id || !user_id || !food_id || !quantity || !total_price || !order_time || !status) {
+            return res.status(400).json({ error: 'Thiếu thông tin order!' });
+        }
+
+        // Tạo order mới
+        const newOrder = {
+            _id,
+            order_id,
+            user_id,
+            food_id,
+            quantity,
+            total_price,
+            order_time: new Date(order_time), // Chuyển đổi sang kiểu Date
+            status,
+        };
+
+        // Lưu order vào cơ sở dữ liệu
+        const result = await collection.insertOne(newOrder);
+        res.status(201).json({ message: 'Order created successfully', orderId: result.insertedId });
+    } catch (error) {
+        console.error("Lỗi khi tạo order:", error);
+        res.status(500).json({ error: 'Failed to create order', details: error.message });
+    }
+});
+
+// READ: Lấy danh sách tất cả orders
+app.get('/api/orders', async (req, res) => {
+    try {
+        const collection = await connectToDatabase(orderCollectionName);
+        const orders = await collection.find({}).toArray();
+        res.status(200).json(orders);
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách orders:", error);
+        res.status(500).json({ error: 'Failed to fetch orders', details: error.message });
+    }
+});
+
+// READ: Lấy thông tin một order theo ID
+app.get('/api/orders/:id', async (req, res) => {
+    try {
+        const collection = await connectToDatabase(orderCollectionName);
+        const order = await collection.findOne({ _id: req.params.id });
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        res.status(200).json(order);
+    } catch (error) {
+        console.error("Lỗi khi lấy thông tin order:", error);
+        res.status(500).json({ error: 'Failed to fetch order', details: error.message });
+    }
+});
+
+// UPDATE: Cập nhật thông tin một order theo ID
+app.put('/api/orders/:id', async (req, res) => {
+    const { order_id, user_id, food_id, quantity, total_price, order_time, status } = req.body;
+
+    if (!order_id || !user_id || !food_id || !quantity || !total_price || !order_time || !status) {
+        return res.status(400).json({ error: 'Thiếu thông tin order!' });
+    }
+
+    try {
+        const collection = await connectToDatabase(orderCollectionName);
+        const result = await collection.updateOne(
+            { _id: req.params.id },
+            {
+                $set: {
+                    order_id,
+                    user_id,
+                    food_id,
+                    quantity,
+                    total_price,
+                    order_time: new Date(order_time),
+                    status,
+                },
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        res.status(200).json({ message: 'Order updated successfully' });
+    } catch (error) {
+        console.error("Lỗi khi cập nhật order:", error);
+        res.status(500).json({ error: 'Failed to update order', details: error.message });
+    }
+});
+
+// DELETE: Xóa một order theo ID
+app.delete('/api/orders/:id', async (req, res) => {
+    try {
+        const collection = await connectToDatabase(orderCollectionName);
+        const result = await collection.deleteOne({ _id: req.params.id });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        res.status(200).json({ message: 'Order deleted successfully' });
+    } catch (error) {
+        console.error("Lỗi khi xóa order:", error);
+        res.status(500).json({ error: 'Failed to delete order', details: error.message });
     }
 });
 
