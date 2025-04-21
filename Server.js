@@ -464,5 +464,52 @@ app.delete('/api/orders/:id', async (req, res) => {
     }
 });
 
+// GET: Lấy thông tin user hiện tại
+app.get('/api/user/profile', authMiddleware, async (req, res) => {
+    try {
+        const collection = await connectToDatabase(userCollectionName);
+        const user = await collection.findOne({ id: req.user.id }); // Lấy user theo ID từ token
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Loại bỏ password trước khi trả về
+        const { password, ...userWithoutPassword } = user;
+        res.status(200).json(userWithoutPassword);
+    } catch (error) {
+        console.error("Lỗi khi lấy thông tin user:", error);
+        res.status(500).json({ error: 'Failed to fetch user profile', details: error.message });
+    }
+});
+
+// PUT: Cập nhật thông tin user
+app.put('/api/user/profile', authMiddleware, async (req, res) => {
+    const { email, role } = req.body;
+
+    try {
+        const collection = await connectToDatabase(userCollectionName);
+
+        // Cập nhật thông tin user
+        const result = await collection.updateOne(
+            { id: req.user.id }, // Lấy user theo ID từ token
+            { $set: { email, role } }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Lấy thông tin user sau khi cập nhật
+        const updatedUser = await collection.findOne({ id: req.user.id });
+        const { password, ...userWithoutPassword } = updatedUser;
+
+        res.status(200).json(userWithoutPassword);
+    } catch (error) {
+        console.error("Lỗi khi cập nhật thông tin user:", error);
+        res.status(500).json({ error: 'Failed to update user profile', details: error.message });
+    }
+});
+
 // Start server
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
