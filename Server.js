@@ -389,11 +389,15 @@ app.post('/api/orders', async (req, res) => {
 // READ: Lấy danh sách tất cả orders
 app.get('/api/orders', async (req, res) => {
     try {
+        const { user_id } = req.query; // Lấy user_id từ query params
         const collection = await connectToDatabase(orderCollectionName);
-        const orders = await collection.find({}).toArray();
+
+        // Lọc đơn hàng theo user_id
+        const orders = await collection.find({ user_id }).toArray();
+
         res.status(200).json(orders);
     } catch (error) {
-        console.error("Lỗi khi lấy danh sách orders:", error);
+        console.error("Error fetching orders:", error);
         res.status(500).json({ error: 'Failed to fetch orders', details: error.message });
     }
 });
