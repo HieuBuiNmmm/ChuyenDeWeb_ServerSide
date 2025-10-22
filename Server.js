@@ -45,7 +45,7 @@ function logErr(ctx, err) {
 // ===================== MongoDB connection (console debug) =====================
 // Ưu tiên ENV, fallback chuỗi cũ (bạn nên chuyển lên ENV: MONGODB_URI)
 const RAW_URI = process.env.MONGODB_URI
-  || 'mongodb+srv://hieubui2004:hieubui2004@cluster0.8gaa8yx.mongodb.net/?appName=Cluster0';
+  || 'mongodb+srv://hieubui2004:159753@cluster0.8gaa8yx.mongodb.net/?appName=Cluster0';
 
 // đảm bảo có /db0 trong URI (Atlas auth dùng DB trong URI)
 const uri = (function ensureDbInUri(u, db) {
