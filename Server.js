@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // MongoDB connection
-const uri = "mongodb+srv://bhuy1212:bhuy1212@cluster0.8gaa8yx.mongodb.net/?appName=Cluster0";
+const uri = "mongodb+srv://hieubui2004:hieubui2004@cluster0.8gaa8yx.mongodb.net/?appName=Cluster0";
 const client = new MongoClient(uri);
 const dbName = "db0";
 const productCollectionName = "product";
@@ -173,39 +173,34 @@ const uploadRouter = require('./Utils/upload'); // Import router từ upload.js
 app.use('/api', uploadRouter); // Gắn router vào đường dẫn /api
 //////////////////////////////////////////////////////////////////////////////////////
 async function generateProductId(category) {
-  if (!category) {
-    const e = new Error('Thiếu category khi tạo ID');
-    e.code = 'MISSING_CATEGORY';
-    throw e;
-  }
-  try {
-    const collection = await getCollection(productCollectionName); // đổi sang helper mới ở phần 2
-    const lastProduct = await collection
-      .find({ ID: { $regex: `^FOOD${category}` } })
-      .sort({ ID: -1 })
-      .limit(1)
-      .toArray();
+    try {
+        const collection = await connectToDatabase(productCollectionName);
 
-    let lastIdNumber = 0;
-    if (lastProduct.length > 0) {
-      const lastId = lastProduct[0].ID;
-      lastIdNumber = parseInt(lastId.slice(-4), 10);
+        // Tìm tất cả sản phẩm có chứa mã danh mục trong ID
+        const lastProduct = await collection
+            .find({ ID: { $regex: `^FOOD${category}` } }) // Tìm ID bắt đầu bằng FOOD + category
+            .sort({ ID: -1 }) // Sắp xếp giảm dần theo ID
+            .limit(1)
+            .toArray();
+
+        let lastIdNumber = 0;
+
+        if (lastProduct.length > 0) {
+            // Lấy 4 ký tự cuối của ID và chuyển thành số
+            const lastId = lastProduct[0].ID;
+            lastIdNumber = parseInt(lastId.slice(-4), 10);
+        }
+
+        // Tăng số thứ tự lên 1
+        const newIdNumber = lastIdNumber + 1;
+
+        // Tạo ID mới
+        const newId = `FOOD${category}${newIdNumber.toString().padStart(4, "0")}`;
+        return newId;
+    } catch (error) {
+        console.error("Lỗi khi tạo ID sản phẩm:", error);
+        throw new Error("Không thể tạo ID sản phẩm");
     }
-    const newIdNumber = lastIdNumber + 1;
-    return `FOOD${category}${newIdNumber.toString().padStart(4, "0")}`;
-  } catch (error) {
-    // log đầy đủ để thấy AtlasError/bad auth
-    console.error("generateProductId error:", {
-      msg: error.message,
-      code: error.code,
-      name: error.name,
-      stack: error.stack,
-    });
-    // ném lại với details để route trả về cho frontend debug nhanh
-    const e = new Error(`Không thể tạo ID sản phẩm: ${error.message}`);
-    e.cause = error;
-    throw e;
-  }
 }
 
 async function generateUserId() {
@@ -281,16 +276,18 @@ app.post('/api/products', async (req, res) => {
 
 // Endpoint để lấy ID mới
 app.get('/api/products/new-id', async (req, res) => {
-  try {
-    const category = (req.query.category || '').toUpperCase();
-    res.status(200).json({ newId: await generateProductId(category) });
-  } catch (error) {
-    console.error("Lỗi khi tạo ID mới:", error);
-    res.status(500).json({
-      error: 'Không thể tạo ID mới',
-      details: error.message, // sẽ thấy "bad auth : authentication failed" nếu là auth
-    });
-  }
+    try {
+        const category = req.query.category;
+        if (!category) {
+            return res.status(400).json({ error: 'Danh mục là bắt buộc' });
+        }
+
+        const newId = await generateProductId(category);
+        res.status(200).json({ newId });
+    } catch (error) {
+        console.error("Lỗi khi tạo ID mới:", error);
+        res.status(500).json({ error: 'Không thể tạo ID mới' });
+    }
 });
 
 // READ: Lấy danh sách tất cả sản phẩm
