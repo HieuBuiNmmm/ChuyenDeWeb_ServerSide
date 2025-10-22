@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // MongoDB connection
-const uri = "mongodb+srv://hieubui2004:hieubui2004@cluster0.8gaa8yx.mongodb.net/?appName=Cluster0";
+const uri = "mongodb+srv://bhuy1212:bhuy1212@cluster0.8gaa8yx.mongodb.net/?appName=Cluster0";
 const client = new MongoClient(uri);
 const dbName = "db0";
 const productCollectionName = "product";
